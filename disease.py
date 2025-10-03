@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os  # Importing os to help with path checks
+import pickle  # Added for saving/loading the model
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
@@ -162,6 +163,7 @@ print("\n--- 4. Summary of Model Performance ---")
 best_accuracy = 0
 best_model_name = ""
 best_model = None
+feature_names_list = X.columns.tolist()  # Store feature names list here
 
 for name, res in results.items():
     current_model = models[name]
@@ -179,6 +181,21 @@ for name, res in results.items():
 
 print(
     f"\n🏆 The best performing model based on simple accuracy is: {best_model_name} with Accuracy: {best_accuracy:.4f}")
+
+# --- Deployment Step: Save the model and encoder ---
+try:
+    with open('best_model.pkl', 'wb') as f:
+        pickle.dump(best_model, f)
+    with open('label_encoder.pkl', 'wb') as f:
+        pickle.dump(le, f)
+    with open('feature_names.pkl', 'wb') as f:
+        pickle.dump(feature_names_list, f)
+    print("\n✅ Deployment files saved: 'best_model.pkl', 'label_encoder.pkl', and 'feature_names.pkl'.")
+    print("You can now use 'prediction_service.py' to run new predictions.")
+except Exception as e:
+    print(f"\n!! WARNING: Could not save deployment files: {e}")
+# ----------------------------------------------------
+
 
 # Optional: Visualization of the best model's confusion matrix
 plt.figure(figsize=(10, 8))
@@ -218,6 +235,7 @@ def predict_new_patient(model, patient_data_dict, feature_names, label_encoder):
     """
 
     # 1. Convert patient data dictionary into a DataFrame
+    # IMPORTANT: Ensure the column order matches the feature_names list
     new_patient_df = pd.DataFrame([patient_data_dict], columns=feature_names)
 
     # 2. Make the prediction (returns an encoded label, typically 0 or 1)
