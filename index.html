@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disease Prediction</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Optional: Set a nice default font and background */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc;
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white p-8 rounded-xl shadow-2xl max-w-2xl w-full">
+        <h1 class="text-3xl font-extrabold text-gray-800 mb-2 border-b pb-2">Heart Disease Predictor</h1>
+        <p class="text-sm text-gray-500 mb-6">Enter the patient's clinical parameters below to get a prediction.</p>
+
+        <!-- Prediction Result Display Area -->
+        <div id="result-box" class="hidden p-4 mt-6 mb-4 rounded-lg shadow-inner transition-all duration-300">
+            <h3 class="text-xl font-bold mb-2" id="prediction-title"></h3>
+            <p id="prediction-confidence" class="text-lg"></p>
+            <p id="prediction-probabilities" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+
+        <!-- Input Form -->
+        <form id="prediction-form" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                <!-- Feature 1: age -->
+                <div class="flex flex-col">
+                    <label for="age" class="text-sm font-medium text-gray-700">Age</label>
+                    <input type="number" id="age" name="age" value="65" min="18" max="120" required class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+                </div>
+
+                <!-- Feature 2: sex (0=Female, 1=Male) -->
+                <div class="flex flex-col">
+                    <label for="sex" class="text-sm font-medium text-gray-700">Sex (1=Male, 0=Female)</label>
+                    <select id="sex" name="sex" required class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+                        <option value="1">1 (Male)</option>
+                        <option value="0">0 (Female)</option>
+                    </select>
+                </div>
+
+                <!-- Feature 3: cp (Chest Pain Type) -->
+                <div class="flex flex-col">
+                    <label for="cp" class="text-sm font-medium text-gray-700">Chest Pain Type (cp: 0-3)</label>
+                    <input type="number" id="cp" name="cp" value="3" min="0" max="3" required class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+                </div>
+
+                <!-- Feature 4: trestbps (Resting Blood Pressure) -->
+                <div class="flex flex-col">
+                    <label for="trestbps" class="text-sm font-medium text-gray-700">Resting BP (trestbps)</label>
+                    <input type="number" id="trestbps" name="trestbps" value="160" required class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+                </div>
+
+                <!-- Feature 5: chol (Serum Cholestoral) -->
+                <div class="flex flex-col">
+                    <label for="chol" class="text-sm font-medium text-gray-700">Cholesterol (chol)</label>
+                    <input type="number" id="chol" name="chol" value="300" required class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+                </div>
+
+                <!-- Feature 6: fbs (Fasting Blood Sugar > 120 mg/dl) -->
+                <div class="flex flex-col">
+                    <label for="fbs" class="text-sm font-medium text-gray-700">Fasting Blood Sugar (fbs: 0 or 1)</label>
+                    <select id="fbs" name="fbs" required class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+                        <option value="1">1 (True >120)</option>
+                        <option value="0" selected>0 (False <120)</option>
+                    </select>
+                </div>
+
+                <!-- Feature 7: restecg (Resting Electrocardiographic Results) -->
+                <div class="flex flex-col">
+                    <label for="restecg" class="text-sm font-medium text-gray-700">Rest ECG (restecg: 0-2)</label>
+                    <input type="number" id="restecg" name="restecg" value="1" min="0" max="2" required class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+                </div>
+
+                <!-- Feature 8: thalach (Maximum Heart Rate Achieved) -->
+                <div class="flex flex-col">
+                    <label for="thalach" class="text-sm font-medium text-gray-700">Max HR (thalach)</label>
+                    <input type="number" id="thalach" name="thalach" value="120" required class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+                </div>
+
+                <!-- Feature 9: exang (Exercise Induced Angina) -->
+                <div class="flex flex-col">
+                    <label for="exang" class="text-sm font-medium text-gray-700">Exercise Angina (exang: 0 or 1)</label>
+                    <select id="exang" name="exang" required class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+                        <option value="1">1 (Yes)</option>
+                        <option value="0" selected>0 (No)</option>
+                    </select>
+                </div>
+
+                <!-- Feature 10: oldpeak (ST depression induced by exercise relative to rest) -->
+                <div class="flex flex-col">
+                    <label for="oldpeak" class="text-sm font-medium text-gray-700">Oldpeak (Float)</label>
+                    <input type="number" step="0.1" id="oldpeak" name="oldpeak" value="3.0" required class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+                </div>
+
+                <!-- Feature 11: slope (Slope of the peak exercise ST segment) -->
+                <div class="flex flex-col">
+                    <label for="slope" class="text-sm font-medium text-gray-700">ST Slope (slope: 0-2)</label>
+                    <input type="number" id="slope" name="slope" value="2" min="0" max="2" required class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+                </div>
+
+                <!-- Feature 12: ca (Number of major vessels (0-3) colored by flourosopy) -->
+                <div class="flex flex-col">
+                    <label for="ca" class="text-sm font-medium text-gray-700">Major Vessels (ca: 0-3)</label>
+                    <input type="number" id="ca" name="ca" value="2" min="0" max="3" required class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+                </div>
+
+                <!-- Feature 13: thal (Thalassemia) -->
+                <div class="flex flex-col">
+                    <label for="thal" class="text-sm font-medium text-gray-700">Thalassemia (thal: 1-3)</label>
+                    <input type="number" id="thal" name="thal" value="3" min="1" max="3" required class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+                </div>
+
+            </div>
+
+            <button type="submit"
+                    id="submit-button"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out shadow-lg shadow-blue-500/50 flex items-center justify-center">
+                <span id="button-text">Get Prediction</span>
+                <div id="loading-spinner" class="hidden spinner-border text-white h-5 w-5 ml-2 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
+            </button>
+            <div id="error-message" class="text-red-500 text-sm mt-2 hidden"></div>
+        </form>
+    </div>
+
+    <script>
+        const API_ENDPOINT = 'http://127.0.0.1:5000/predict';
+
+        const form = document.getElementById('prediction-form');
+        const resultBox = document.getElementById('result-box');
+        const predictionTitle = document.getElementById('prediction-title');
+        const predictionConfidence = document.getElementById('prediction-confidence');
+        const predictionProbabilities = document.getElementById('prediction-probabilities');
+        const submitButton = document.getElementById('submit-button');
+        const buttonText = document.getElementById('button-text');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const errorMessage = document.getElementById('error-message');
+
+        // Helper function to show/hide loading state
+        function setLoading(isLoading) {
+            submitButton.disabled = isLoading;
+            buttonText.textContent = isLoading ? 'Predicting...' : 'Get Prediction';
+            if (isLoading) {
+                loadingSpinner.classList.remove('hidden');
+            } else {
+                loadingSpinner.classList.add('hidden');
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            setLoading(true);
+            resultBox.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+
+            // 1. Collect all feature data and convert to correct numeric type
+            const formData = new FormData(form);
+            const data = {};
+
+            // Define features that must be treated as floats (only 'oldpeak' here)
+            const floatKeys = ['oldpeak'];
+
+            // Loop through form data, ensuring all values are numeric
+            for (const [key, value] of formData.entries()) {
+                if (floatKeys.includes(key)) {
+                    data[key] = parseFloat(value);
+                } else {
+                    data[key] = parseInt(value);
+                }
+            }
+
+            try {
+                // 2. Send POST request to the Flask API
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // 3. Handle successful prediction
+                    const { prediction, interpretation, confidence_percent, probabilities } = result;
+
+                    let colorClass = '';
+                    if (prediction === 1) {
+                        colorClass = 'bg-red-100 border-red-500 text-red-800';
+                    } else {
+                        colorClass = 'bg-green-100 border-green-500 text-green-800';
+                    }
+
+                    resultBox.className = `p-4 mt-6 mb-4 rounded-lg shadow-inner ${colorClass}`;
+
+                    predictionTitle.textContent = interpretation;
+                    predictionConfidence.textContent = `Confidence: ${confidence_percent.toFixed(2)}%`;
+
+                    // Format probabilities
+                    let probText = 'Probabilities: ';
+                    for (const [key, value] of Object.entries(probabilities)) {
+                        probText += `Outcome ${key}: ${Math.round(value * 100)}% | `;
+                    }
+                    predictionProbabilities.textContent = probText.slice(0, -3); // Remove trailing '|'
+
+                    resultBox.classList.remove('hidden');
+
+                } else {
+                    // 4. Handle API validation errors (e.g., missing fields)
+                    const errorText = result.error || "An unknown API error occurred.";
+                    errorMessage.textContent = `API Error: ${errorText}`;
+                    errorMessage.classList.remove('hidden');
+                }
+
+            } catch (error) {
+                // 5. Handle network or fetch errors
+                errorMessage.textContent = `Network Error: Could not reach the API at ${API_ENDPOINT}. Ensure app.py is running.`;
+                errorMessage.classList.remove('hidden');
+                console.error('Fetch error:', error);
+            } finally {
+                setLoading(false);
+            }
+        });
+    </script>
+</body>
+</html>

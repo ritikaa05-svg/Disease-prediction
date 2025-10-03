@@ -11,7 +11,8 @@ ENCODER_PATH = 'label_encoder.pkl'
 FEATURES_PATH = 'feature_names.pkl'
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+# Enable CORS so the web page (index.html) can talk to this API
+CORS(app)
 
 # Global variables for the loaded assets
 loaded_model = None
@@ -79,7 +80,7 @@ def load_assets():
         exit()
 
 
-# --- NEW Root Endpoint ---
+# --- Root Endpoint (For status checks) ---
 @app.route('/', methods=['GET'])
 def home():
     """Provides status and instructions for the API."""
@@ -91,7 +92,7 @@ def home():
     })
 
 
-# --- API Endpoint ---
+# --- Prediction API Endpoint ---
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -126,7 +127,6 @@ def predict():
         )
 
         # Calculate confidence
-        # Note: final_outcome is a string ('0' or '1'), need to convert to int for transform
         predicted_index = loaded_encoder.transform([int(final_outcome)])[0]
         confidence = final_probabilities[predicted_index]
 
@@ -157,5 +157,4 @@ if __name__ == '__main__':
     # Load assets before starting the API
     load_assets()
     # The 'host'='0.0.0.0' allows external connections
-    # Note: Use debug=True for development to auto-reload on changes
     app.run(host='0.0.0.0', port=5000, debug=True)

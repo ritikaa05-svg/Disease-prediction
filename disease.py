@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import os  # Importing os to help with path checks
-import pickle  # Added for saving/loading the model
+import os
+import pickle
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
@@ -15,10 +15,7 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 
 # --- 1. Project Setup and Data Acquisition ---
 print("--- 1. Data Acquisition and Initial Inspection ---")
-
-# --- ACTION REQUIRED: Load your actual full, large dataset here. ---
-# FIX: Using the relative path. Ensure 'disease_data.csv' is in the SAME folder.
-data_filename = r'C:\Users\Ritika Kunwar\PycharmProjects\Disease prediction\heart.csv'  # <-- EDIT THIS LINE if your file is named differently (e.g., 'Training.csv')
+data_filename = r'C:\Users\Ritika Kunwar\PycharmProjects\Disease prediction\heart.csv'
 
 try:
     # Check if the file exists in the current working directory for clarity
@@ -40,20 +37,14 @@ except Exception as e:
     print(
         "If this is a Permission Error, ensure the file is not open in another program (like Excel) and the path is correct.")
     exit()
-# --------------------------------------------------------------------------
-
-# --- Standard Data Cleanup for this type of symptom dataset ---
-
 # 1. Drop extraneous columns, especially the common 'Unnamed: X' artifact
 if 'Unnamed: 133' in df.columns:
     df.drop('Unnamed: 133', axis=1, inplace=True)
 
 # 2. Identify symptom columns (all columns except 'target' - the disease outcome)
-# FIX: Changed exclusion column from 'prognosis' to 'target'
 symptom_cols = [col for col in df.columns if col != 'target']
 
 # 3. FIX: Explicitly convert symptom columns to numeric.
-# 'errors='coerce' will turn any problematic string values into NaN.
 for col in symptom_cols:
     df[col] = pd.to_numeric(df[col], errors='coerce')
 
@@ -61,22 +52,17 @@ for col in symptom_cols:
 df.fillna(0, inplace=True)
 
 # 5. Remove rows with all zero symptoms
-# This step is often less relevant for heart disease data, but kept for consistency
 df['symptom_sum'] = df[symptom_cols].sum(axis=1)
 df = df[df['symptom_sum'] > 0].drop('symptom_sum', axis=1)
 
 # 6. Remove duplicate rows
 df.drop_duplicates(inplace=True)
-# -------------------------------------------------------------
 
 print(f"Dataset shape after cleanup: {df.shape}")
 print("\nFirst 5 rows of the data:")
 print(df.head())
 print("\nData Information (Dtypes and Nulls):")
 df.info()
-
-# --- CRITICAL DATA VALIDATION ---
-# FIX: Checking 'target' column instead of 'prognosis'
 if 'target' not in df.columns:
     print("\n\n!! CRITICAL ERROR: TARGET COLUMN MISSING !!")
     print("The required target column 'target' was not found after cleanup. Check your data file structure.")
@@ -91,14 +77,9 @@ if unique_classes <= 1:
         "Please check your 'disease_data.csv' to ensure the 'target' column has different class labels (like 0 and 1).")
     # Exit cleanly as no model can be trained
     exit()
-# ----------------------------------
 
-
-# --- 2. Exploratory Data Analysis (EDA) and Preprocessing ---
 print("\n--- 2. Preprocessing and EDA ---")
 
-# 2.1 Feature and Target Separation
-# FIX: Dropping 'target' for features X, and setting 'target' as target variable y
 X = df.drop('target', axis=1)
 y = df['target']  # Target column is now 'target'
 
@@ -194,8 +175,6 @@ try:
     print("You can now use 'prediction_service.py' to run new predictions.")
 except Exception as e:
     print(f"\n!! WARNING: Could not save deployment files: {e}")
-# ----------------------------------------------------
-
 
 # Optional: Visualization of the best model's confusion matrix
 plt.figure(figsize=(10, 8))
@@ -209,7 +188,6 @@ plt.xlabel('Predicted Label')
 plt.tight_layout()
 plt.show()
 
-# Optional: Feature Importance (Example using Random Forest)
 rf_model = models["Random Forest"]
 if hasattr(rf_model, 'feature_importances_'):
     importances = rf_model.feature_importances_
@@ -225,17 +203,12 @@ if hasattr(rf_model, 'feature_importances_'):
     plt.title('Top 5 Feature Importances')
     plt.show()
 
-# --- 5. Prediction Function (How to Use the Model) ---
 print("\n--- 5. Using the Model for Prediction ---")
 
 
 def predict_new_patient(model, patient_data_dict, feature_names, label_encoder):
-    """
-    Predicts the outcome (e.g., 0 or 1) for a single new patient.
-    """
 
     # 1. Convert patient data dictionary into a DataFrame
-    # IMPORTANT: Ensure the column order matches the feature_names list
     new_patient_df = pd.DataFrame([patient_data_dict], columns=feature_names)
 
     # 2. Make the prediction (returns an encoded label, typically 0 or 1)
@@ -253,10 +226,6 @@ def predict_new_patient(model, patient_data_dict, feature_names, label_encoder):
 
 # --- Example of New Patient Data ---
 if best_model:
-    # Generate a sample patient dictionary where all features are 0 (This is highly customized)
-    # Since this is Heart Disease data, we need realistic inputs.
-    # Let's use a pattern for a high-risk patient (older age, high cholesterol, low maximum heart rate)
-
     sample_input = {col: 0 for col in X.columns.tolist()}
 
     # Common features for Heart Disease prediction (assuming this is the Cleveland dataset structure)
